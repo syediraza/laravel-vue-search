@@ -26,6 +26,28 @@
           </button>
         </div>
 
+        <!-- Divider -->
+        <div class="h-px bg-slate-800/50"></div>
+
+        <!-- Categorical Filters (Status) -->
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <!-- Status Tag Filters -->
+          <div class="flex flex-wrap items-center gap-2.5">
+            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1">Status:</span>
+            <button 
+              v-for="statusOpt in statusOptions" 
+              :key="statusOpt"
+              @click="toggleStatus(statusOpt)"
+              class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5"
+              :class="isStatusSelected(statusOpt) 
+                ? 'bg-violet-600/20 border-violet-500 text-violet-300 shadow-sm' 
+                : 'bg-slate-950/40 border-slate-800/80 text-slate-400 hover:border-slate-700 hover:text-slate-300'"
+            >
+              <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(statusOpt)"></span>
+              {{ capitalize(statusOpt) }}
+            </button>
+          </div>
+        </div>
       </section>
 
       <!-- Campaigns List Card View & Table -->
@@ -261,6 +283,7 @@ const debouncedSearch = ref('');
 
 // Filter tag lists
 const selectedStatuses = ref([]);
+const statusOptions = ['active', 'paused', 'completed', 'draft'];
 
 // Pagination State
 const pagination = reactive({
@@ -341,6 +364,35 @@ const goToPage = (page) => {
 
 const resetFilters = () => {
   searchInput.value = '';
+  selectedStatuses.value = [];
+};
+
+const toggleStatus = (status) => {
+  const index = selectedStatuses.value.indexOf(status);
+  if (index > -1) {
+    selectedStatuses.value.splice(index, 1);
+  } else {
+    selectedStatuses.value.push(status);
+  }
+};
+
+const isStatusSelected = (status) => {
+  return selectedStatuses.value.includes(status);
+};
+
+const getStatusDotClass = (status) => {
+  switch (status) {
+    case 'active':
+      return 'bg-emerald-400';
+    case 'paused':
+      return 'bg-amber-400';
+    case 'completed':
+      return 'bg-blue-400';
+    case 'draft':
+      return 'bg-slate-400';
+    default:
+      return 'bg-slate-400';
+  }
 };
 
 

@@ -44,15 +44,18 @@ class Campaign extends Model
     public function scopeFilter(Builder $query, array $filters): Builder
     {
         $query->when(filled($filters['search'] ?? null), function (Builder $query) use ($filters) {
-        $search = $filters['search'];
+            $search = $filters['search'];
 
-        $query->where(function (Builder $q) use ($search) {
-          $q->where('name', 'like', "%{$search}%")
-          ->orWhere('description', 'like', "%{$search}%");
-    });
-});
+            $query->where(function (Builder $q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('description', 'like', "%{$search}%");
+            });
+        });
 
-
+        $query->when(filled($filters['status'] ?? null), function (Builder $query) use ($filters) {
+            $statuses = is_array($filters['status']) ? $filters['status'] : [$filters['status']];
+            $query->whereIn('status', $statuses);
+        });
 
         return $query;
     }
