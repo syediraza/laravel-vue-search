@@ -52,38 +52,9 @@ class Campaign extends Model
             });
         }
 
-        // 2. Status Multi-select Filter (expects array of statuses)
-        if (!empty($filters['status'])) {
-            $statuses = is_array($filters['status']) ? $filters['status'] : [$filters['status']];
-            $query->whereIn('status', $statuses);
-        }
+      
 
-        // 3. Type Multi-select Filter (expects array of types)
-        if (!empty($filters['type'])) {
-            $types = is_array($filters['type']) ? $filters['type'] : [$filters['type']];
-            $query->whereIn('type', $types);
-        }
-
-        // 4. Date Range Filters (kept in DB query scope for robustness, though frontend inputs are removed)
-        if (!empty($filters['start_date'])) {
-            $query->where('start_date', '>=', $filters['start_date']);
-        }
-        if (!empty($filters['end_date'])) {
-            $query->where(function (Builder $q) use ($filters) {
-                $q->where('end_date', '<=', $filters['end_date'])
-                  ->orWhereNull('end_date');
-            });
-        }
-
-        // 5. Dynamic Sorting
-        $sortBy = $filters['sort_by'] ?? 'created_at';
-        $sortOrder = $filters['sort_order'] ?? 'desc';
-
-        // Whitelist sorting columns for safety
-        $allowedSorts = ['name', 'status', 'type', 'budget', 'spent', 'clicks', 'impressions', 'conversions', 'start_date', 'end_date', 'created_at'];
-        if (in_array($sortBy, $allowedSorts)) {
-            $query->orderBy($sortBy, $sortOrder === 'asc' ? 'asc' : 'desc');
-        }
+       
 
         return $query;
     }
