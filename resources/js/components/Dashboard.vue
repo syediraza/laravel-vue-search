@@ -249,7 +249,7 @@
 import { ref, reactive, computed, watch, onMounted } from 'vue';
 import axios from 'axios';
 import { 
-  Search, Calendar, RefreshCw, 
+  Search, Calendar, 
   ChevronLeft, ChevronRight, X 
 } from '@lucide/vue';
 
@@ -270,7 +270,6 @@ const pagination = reactive({
   total: 0
 });
 
-const statusOptions = ['active', 'paused', 'completed', 'draft'];
 
 // Debounce timer
 let debounceTimeout = null;
@@ -407,18 +406,4 @@ onMounted(() => {
 });
 </script>
 
-<style scoped>
-/* Scoped Animations & Transitions */
-.toast-enter-active,
-.toast-leave-active {
-  transition: all 0.3s ease;
-}
-.toast-enter-from {
-  opacity: 0;
-  transform: translateY(-20px);
-}
-.toast-leave-to {
-  opacity: 0;
-  transform: scale(0.9);
-}
-</style>
+
