@@ -320,205 +320,196 @@
   </div>
 </template>
 
-<script setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue';
+<script>
 import axios from 'axios';
 import { 
   Search, Calendar, RefreshCw, 
   ChevronLeft, ChevronRight, X 
-} from '@lucide/vue';
+} from 'lucide-vue';
 
-// State Variables
-const campaigns = ref([]);
-const loading = ref(false);
-const searchInput = ref('');
-const debouncedSearch = ref('');
-
-// Filter tag lists
-const selectedStatuses = ref([]);
-
-// Pagination State
-const pagination = reactive({
-  current_page: 1,
-  last_page: 1,
-  per_page: 10,
-  total: 0
-});
-
-// Control Options
-const perPage = ref(10);
-const sortBy = ref('created_at');
-const sortOrder = ref('desc');
-
-const statusOptions = ['active', 'paused', 'completed', 'draft'];
-
-// Debounce timer
-let debounceTimeout = null;
-
-// Watch searchInput to perform debouncing
-watch(searchInput, (newValue) => {
-  if (debounceTimeout) clearTimeout(debounceTimeout);
-  debounceTimeout = setTimeout(() => {
-    debouncedSearch.value = newValue;
-  }, 350);
-});
-
-// Watch reactive filters to fetch campaigns dynamically
-watch([debouncedSearch, perPage, sortBy, sortOrder], () => {
-  goToPage(1); // Reset to page 1 on filter changes
-});
-
-// Watchers for status array filters
-watch(selectedStatuses, () => {
-  goToPage(1);
-}, { deep: true });
-
-// Page Range Generator for Pagination Numbers
-const visiblePages = computed(() => {
-  const range = [];
-  const start = Math.max(1, pagination.current_page - 2);
-  const end = Math.min(pagination.last_page, pagination.current_page + 2);
-  for (let i = start; i <= end; i++) {
-    range.push(i);
-  }
-  return range;
-});
-
-// Axios calls configuration
-const fetchCampaigns = async (page = 1) => {
-  loading.value = true;
-  try {
-    const params = {
-      page,
-      per_page: perPage.value,
-      sort_by: sortBy.value,
-      sort_order: sortOrder.value,
+export default {
+  name: 'Dashboard',
+  components: {
+    Search,
+    Calendar,
+    RefreshCw,
+    ChevronLeft,
+    ChevronRight,
+    X
+  },
+  data() {
+    return {
+      campaigns: [],
+      loading: false,
+      searchInput: '',
+      debouncedSearch: '',
+      selectedStatuses: [],
+      pagination: {
+        current_page: 1,
+        last_page: 1,
+        per_page: 10,
+        total: 0
+      },
+      perPage: 10,
+      sortBy: 'created_at',
+      sortOrder: 'desc',
+      statusOptions: ['active', 'paused', 'completed', 'draft'],
+      debounceTimeout: null
     };
+  },
+  watch: {
+    searchInput(newValue) {
+      if (this.debounceTimeout) clearTimeout(this.debounceTimeout);
+      this.debounceTimeout = setTimeout(() => {
+        this.debouncedSearch = newValue;
+      }, 350);
+    },
+    debouncedSearch() {
+      this.goToPage(1);
+    },
+    perPage() {
+      this.goToPage(1);
+    },
+    sortBy() {
+      this.goToPage(1);
+    },
+    sortOrder() {
+      this.goToPage(1);
+    },
+    selectedStatuses: {
+      handler() {
+        this.goToPage(1);
+      },
+      deep: true
+    }
+  },
+  computed: {
+    visiblePages() {
+      const range = [];
+      const start = Math.max(1, this.pagination.current_page - 2);
+      const end = Math.min(this.pagination.last_page, this.pagination.current_page + 2);
+      for (let i = start; i <= end; i++) {
+        range.push(i);
+      }
+      return range;
+    }
+  },
+  mounted() {
+    this.fetchCampaigns();
+  },
+  methods: {
+    async fetchCampaigns(page = 1) {
+      this.loading = true;
+      try {
+        const params = {
+          page,
+          per_page: this.perPage,
+          sort_by: this.sortBy,
+          sort_order: this.sortOrder,
+        };
 
-    if (debouncedSearch.value) params.search = debouncedSearch.value;
-    
-    // Pass status array filters if selected
-    if (selectedStatuses.value.length > 0) params.status = selectedStatuses.value;
+        if (this.debouncedSearch) params.search = this.debouncedSearch;
+        
+        if (this.selectedStatuses.length > 0) params.status = this.selectedStatuses;
 
-    const response = await axios.get('/api/campaigns', { params });
-    const { data, meta } = response.data;
-    
-    campaigns.value = data;
-    
-    // Map pagination
-    pagination.current_page = meta.current_page;
-    pagination.last_page = meta.last_page;
-    pagination.per_page = meta.per_page;
-    pagination.total = meta.total;
-  } catch (error) {
-    console.error('Error fetching campaigns:', error);
-  } finally {
-    loading.value = false;
+        const response = await axios.get('/api/campaigns', { params });
+        const { data, meta } = response.data;
+        
+        this.campaigns = data;
+        
+        this.pagination.current_page = meta.current_page;
+        this.pagination.last_page = meta.last_page;
+        this.pagination.per_page = meta.per_page;
+        this.pagination.total = meta.total;
+      } catch (error) {
+        console.error('Error fetching campaigns:', error);
+      } finally {
+        this.loading = false;
+      }
+    },
+    goToPage(page) {
+      if (page < 1 || page > this.pagination.last_page) return;
+      this.fetchCampaigns(page);
+    },
+    sortByColumn(col) {
+      if (this.sortBy === col) {
+        this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+      } else {
+        this.sortBy = col;
+        this.sortOrder = 'desc';
+      }
+    },
+    toggleStatus(status) {
+      const index = this.selectedStatuses.indexOf(status);
+      if (index > -1) {
+        this.selectedStatuses.splice(index, 1);
+      } else {
+        this.selectedStatuses.push(status);
+      }
+    },
+    isStatusSelected(status) {
+      return this.selectedStatuses.includes(status);
+    },
+    resetFilters() {
+      this.searchInput = '';
+      this.debouncedSearch = '';
+      this.selectedStatuses = [];
+      this.sortBy = 'created_at';
+      this.sortOrder = 'desc';
+      this.perPage = 10;
+    },
+    formatNumber(num) {
+      if (num === undefined || num === null) return '0';
+      return Number(num).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    },
+    calculatePercentage(value, total) {
+      if (!total || total <= 0) return 0;
+      return Math.round((value / total) * 100);
+    },
+    calculateCTR(clicks, impressions) {
+      if (!impressions || impressions <= 0) return '0.00';
+      return ((clicks / impressions) * 100).toFixed(2);
+    },
+    formatDate(dateStr) {
+      if (!dateStr) return '';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    },
+    capitalize(str) {
+      if (!str) return '';
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    },
+    getStatusBadgeClass(status) {
+      switch (status) {
+        case 'active':
+          return 'bg-emerald-950/30 border-emerald-500/20 text-emerald-400';
+        case 'paused':
+          return 'bg-amber-950/30 border-amber-500/20 text-amber-400';
+        case 'completed':
+          return 'bg-blue-950/30 border-blue-500/20 text-blue-400';
+        case 'draft':
+          return 'bg-slate-900 border-slate-800 text-slate-400';
+        default:
+          return 'bg-slate-900 border-slate-800 text-slate-400';
+      }
+    },
+    getStatusDotClass(status) {
+      switch (status) {
+        case 'active': return 'bg-emerald-500 animate-pulse';
+        case 'paused': return 'bg-amber-500';
+        case 'completed': return 'bg-blue-500';
+        case 'draft': return 'bg-slate-500';
+        default: return 'bg-slate-500';
+      }
+    },
+    getSpendProgressColor(campaign) {
+      const pct = this.calculatePercentage(campaign.spent, campaign.budget);
+      if (pct > 100) return 'bg-rose-500';
+      if (pct > 90) return 'bg-amber-500';
+      return 'bg-emerald-500';
+    }
   }
 };
-
-// Pagination execution
-const goToPage = (page) => {
-  if (page < 1 || page > pagination.last_page) return;
-  fetchCampaigns(page);
-};
-
-// Sorting toggles
-const sortByColumn = (col) => {
-  if (sortBy.value === col) {
-    // Toggle direction
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortBy.value = col;
-    sortOrder.value = 'desc'; // Default to desc for new sorting columns
-  }
-};
-
-// Filter manipulation helper functions
-const toggleStatus = (status) => {
-  const index = selectedStatuses.value.indexOf(status);
-  if (index > -1) {
-    selectedStatuses.value.splice(index, 1);
-  } else {
-    selectedStatuses.value.push(status);
-  }
-};
-
-const isStatusSelected = (status) => selectedStatuses.value.includes(status);
-
-const resetFilters = () => {
-  searchInput.value = '';
-  debouncedSearch.value = '';
-  selectedStatuses.value = [];
-  sortBy.value = 'created_at';
-  sortOrder.value = 'desc';
-  perPage.value = 10;
-};
-
-// Formatting helpers
-const formatNumber = (num) => {
-  if (num === undefined || num === null) return '0';
-  return Number(num).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-};
-
-const calculatePercentage = (value, total) => {
-  if (!total || total <= 0) return 0;
-  return Math.round((value / total) * 100);
-};
-
-const calculateCTR = (clicks, impressions) => {
-  if (!impressions || impressions <= 0) return '0.00';
-  return ((clicks / impressions) * 100).toFixed(2);
-};
-
-const formatDate = (dateStr) => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-};
-
-const capitalize = (str) => {
-  if (!str) return '';
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
-// Class mapping helpers
-const getStatusBadgeClass = (status) => {
-  switch (status) {
-    case 'active':
-      return 'bg-emerald-950/30 border-emerald-500/20 text-emerald-400';
-    case 'paused':
-      return 'bg-amber-950/30 border-amber-500/20 text-amber-400';
-    case 'completed':
-      return 'bg-blue-950/30 border-blue-500/20 text-blue-400';
-    case 'draft':
-      return 'bg-slate-900 border-slate-800 text-slate-400';
-    default:
-      return 'bg-slate-900 border-slate-800 text-slate-400';
-  }
-};
-
-const getStatusDotClass = (status) => {
-  switch (status) {
-    case 'active': return 'bg-emerald-500 animate-pulse';
-    case 'paused': return 'bg-amber-500';
-    case 'completed': return 'bg-blue-500';
-    case 'draft': return 'bg-slate-500';
-    default: return 'bg-slate-500';
-  }
-};
-
-const getSpendProgressColor = (campaign) => {
-  const pct = calculatePercentage(campaign.spent, campaign.budget);
-  if (pct > 100) return 'bg-rose-500';
-  if (pct > 90) return 'bg-amber-500';
-  return 'bg-emerald-500';
-};
-
-// Lifecycle
-onMounted(() => {
-  fetchCampaigns();
-});
 </script>
 
 <style scoped>

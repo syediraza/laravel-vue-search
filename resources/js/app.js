@@ -1,6 +1,7 @@
 import './bootstrap';
-import { createApp } from 'vue';
+import Vue from 'vue';
 import Dashboard from './components/Dashboard.vue';
 
-const app = createApp(Dashboard);
-app.mount('#app');
+new Vue({
+    render: h => h(Dashboard)
+}).$mount('#app');
