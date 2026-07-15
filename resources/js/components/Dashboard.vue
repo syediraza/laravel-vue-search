@@ -26,53 +26,6 @@
           </button>
         </div>
 
-        <!-- Divider -->
-        <div class="h-px bg-slate-800/50"></div>
-
-        <!-- Categorical Filters (Status) -->
-        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
-          <!-- Status Tag Filters -->
-          <div class="flex flex-wrap items-center gap-2.5">
-            <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider mr-1">Status:</span>
-            <button 
-              v-for="statusOpt in statusOptions" 
-              :key="statusOpt"
-              @click="toggleStatus(statusOpt)"
-              class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all cursor-pointer flex items-center gap-1.5"
-              :class="isStatusSelected(statusOpt) 
-                ? 'bg-violet-600/20 border-violet-500 text-violet-300 shadow-sm' 
-                : 'bg-slate-950/40 border-slate-800/80 text-slate-400 hover:border-slate-700 hover:text-slate-300'"
-            >
-              <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(statusOpt)"></span>
-              {{ capitalize(statusOpt) }}
-            </button>
-          </div>
-        </div>
-
-        <!-- Stats bottom control info -->
-        <div class="flex items-center justify-between text-xs text-slate-400 pt-1">
-          <div class="flex items-center gap-4">
-            <button 
-              @click="resetFilters" 
-              class="text-violet-400 hover:text-violet-355 font-medium flex items-center gap-1 transition-colors cursor-pointer"
-            >
-              <RefreshCw class="w-3.5 h-3.5" />
-              Reset All Filters
-            </button>
-          </div>
-          <div class="flex items-center gap-2">
-            <span>Per Page:</span>
-            <select 
-              v-model="perPage" 
-              class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-slate-300 focus:outline-none focus:border-violet-500"
-            >
-              <option :value="5">5</option>
-              <option :value="10">10</option>
-              <option :value="20">20</option>
-              <option :value="50">50</option>
-            </select>
-          </div>
-        </div>
       </section>
 
       <!-- Campaigns List Card View & Table -->
@@ -95,10 +48,10 @@
 
         <!-- Empty State -->
         <div v-else-if="campaigns.length === 0" class="p-12 text-center flex flex-col items-center justify-center space-y-4">
-          <div class="w-16 h-16 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center text-slate-500">
+          <div class="w-16 h-16 rounded-full bg-slate-900/60 border border-slate-800 flex items-center justify-center text-slate-500 mx-auto">
             <Search class="w-8 h-8" />
           </div>
-          <div class="max-w-md">
+          <div class="max-w-md mx-auto">
             <h3 class="text-base font-semibold text-slate-200">No campaigns found</h3>
             <p class="text-sm text-slate-400 mt-1">We couldn't find any campaign matching your criteria. Try adjusting your filters or search keywords.</p>
           </div>
@@ -110,46 +63,18 @@
           </button>
         </div>
 
-        <!-- Desktop Grid / Table -->
-        <div v-else class="hidden md:block overflow-x-auto">
+        <div v-else>
+          <!-- Desktop Grid / Table -->
+          <div class="hidden md:block overflow-x-auto">
           <table class="w-full text-left border-collapse">
             <thead>
               <tr class="border-b border-slate-800/80 bg-slate-900/40 text-slate-400 text-xs font-semibold tracking-wider">
-                <th class="py-4 px-6 cursor-pointer hover:text-slate-200 select-none" @click="sortByColumn('name')">
-                  <div class="flex items-center gap-1.5">
-                    Campaign Name
-                    <span v-if="sortBy === 'name'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-                  </div>
-                </th>
-                <th class="py-4 px-6 cursor-pointer hover:text-slate-200 select-none" @click="sortByColumn('status')">
-                  <div class="flex items-center gap-1.5">
-                    Status
-                    <span v-if="sortBy === 'status'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-                  </div>
-                </th>
-                <th class="py-4 px-6 cursor-pointer hover:text-slate-200 select-none" @click="sortByColumn('type')">
-                  <div class="flex items-center gap-1.5">
-                    Type
-                    <span v-if="sortBy === 'type'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-                  </div>
-                </th>
-                <th class="py-4 px-6 cursor-pointer hover:text-slate-200 select-none" @click="sortByColumn('budget')">
-                  <div class="flex items-center gap-1.5">
-                    Budget / Spent
-                    <span v-if="sortBy === 'budget'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-                  </div>
-                </th>
-                <th class="py-4 px-6 cursor-pointer hover:text-slate-200 select-none">
-                  <div class="flex items-center gap-1.5">
-                    Performance CTR
-                  </div>
-                </th>
-                <th class="py-4 px-6 cursor-pointer hover:text-slate-200 select-none" @click="sortByColumn('start_date')">
-                  <div class="flex items-center gap-1.5">
-                    Duration
-                    <span v-if="sortBy === 'start_date'">{{ sortOrder === 'asc' ? '▲' : '▼' }}</span>
-                  </div>
-                </th>
+                <th class="py-4 px-6">Campaign Name</th>
+                <th class="py-4 px-6">Status</th>
+                <th class="py-4 px-6">Type</th>
+                <th class="py-4 px-6">Budget / Spent</th>
+                <th class="py-4 px-6">Performance CTR</th>
+                <th class="py-4 px-6">Duration</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-slate-800/50 bg-slate-900/10">
@@ -170,7 +95,6 @@
                     class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold border"
                     :class="getStatusBadgeClass(campaign.status)"
                   >
-                    <span class="w-1.5 h-1.5 rounded-full" :class="getStatusDotClass(campaign.status)"></span>
                     {{ capitalize(campaign.status) }}
                   </span>
                 </td>
@@ -313,6 +237,7 @@
             </button>
           </div>
         </div>
+      </div>
 
       </section>
     </main>
@@ -345,11 +270,6 @@ const pagination = reactive({
   total: 0
 });
 
-// Control Options
-const perPage = ref(10);
-const sortBy = ref('created_at');
-const sortOrder = ref('desc');
-
 const statusOptions = ['active', 'paused', 'completed', 'draft'];
 
 // Debounce timer
@@ -364,7 +284,7 @@ watch(searchInput, (newValue) => {
 });
 
 // Watch reactive filters to fetch campaigns dynamically
-watch([debouncedSearch, perPage, sortBy, sortOrder], () => {
+watch(debouncedSearch, () => {
   goToPage(1); // Reset to page 1 on filter changes
 });
 
@@ -390,9 +310,6 @@ const fetchCampaigns = async (page = 1) => {
   try {
     const params = {
       page,
-      per_page: perPage.value,
-      sort_by: sortBy.value,
-      sort_order: sortOrder.value,
     };
 
     if (debouncedSearch.value) params.search = debouncedSearch.value;
@@ -423,37 +340,14 @@ const goToPage = (page) => {
   fetchCampaigns(page);
 };
 
-// Sorting toggles
-const sortByColumn = (col) => {
-  if (sortBy.value === col) {
-    // Toggle direction
-    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
-  } else {
-    sortBy.value = col;
-    sortOrder.value = 'desc'; // Default to desc for new sorting columns
-  }
-};
-
-// Filter manipulation helper functions
-const toggleStatus = (status) => {
-  const index = selectedStatuses.value.indexOf(status);
-  if (index > -1) {
-    selectedStatuses.value.splice(index, 1);
-  } else {
-    selectedStatuses.value.push(status);
-  }
-};
-
-const isStatusSelected = (status) => selectedStatuses.value.includes(status);
-
 const resetFilters = () => {
   searchInput.value = '';
-  debouncedSearch.value = '';
-  selectedStatuses.value = [];
-  sortBy.value = 'created_at';
-  sortOrder.value = 'desc';
-  perPage.value = 10;
 };
+
+
+
+
+
 
 // Formatting helpers
 const formatNumber = (num) => {
@@ -498,15 +392,7 @@ const getStatusBadgeClass = (status) => {
   }
 };
 
-const getStatusDotClass = (status) => {
-  switch (status) {
-    case 'active': return 'bg-emerald-500 animate-pulse';
-    case 'paused': return 'bg-amber-500';
-    case 'completed': return 'bg-blue-500';
-    case 'draft': return 'bg-slate-500';
-    default: return 'bg-slate-500';
-  }
-};
+
 
 const getSpendProgressColor = (campaign) => {
   const pct = calculatePercentage(campaign.spent, campaign.budget);
